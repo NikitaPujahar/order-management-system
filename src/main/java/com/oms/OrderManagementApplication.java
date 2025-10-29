@@ -124,24 +124,23 @@ public class OrderManagementApplication {
                                           ProductRepository productRepository,
                                           PricingEngine pricingEngine) {
         List<Item> items = Arrays.asList(
-                new Item("P001", 1),
-                new Item("P003", 2)
+                new Item("P001", 1, new BigDecimal("12500")),
+                new Item("P003", 2, new BigDecimal("625"))
         );
 
-        // Enrich items with prices
         for (Item item : items) {
             Product product = productRepository.findById(item.getProductId()).get();
             item.setUnitPrice(product.getPrice());
             item.setLinePrice(product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
         }
 
-        Order dummyOrder = new Order("DUMMY", "C001", items, "Test Address");
+        Order order = new Order("Order", "C001", items, "Address");
 
         System.out.println("Base Total (incl VAT): 13750 SEK\n");
 
         for (CustomerType type : CustomerType.values()) {
             Customer customer = new Customer("TEST", type, new BigDecimal("50000"));
-            PricingResult pricing = pricingEngine.calculatePricing(dummyOrder, customer);
+            PricingResult pricing = pricingEngine.calculatePricing(order, customer);
 
             System.out.println(type + " Customer:");
             System.out.println("---------------------------------");
@@ -158,8 +157,8 @@ public class OrderManagementApplication {
         Thread customerA = new Thread(() -> {
             try {
                 List<Item> items = Arrays.asList(new Item("P004", 3));
-                Order order = orderService.createOrder("C001", items, "Customer A Address");
-                Thread.sleep(50); // Simulate processing time
+                Order order = orderService.createOrder("C003", items, "Customer A Address");
+                Thread.sleep(50);
                 orderService.processOrder(order.getOrderId());
                 System.out.println("concurrentOrders Customer A: Order " + order.getOrderId() + " succeeded");
             } catch (Exception e) {
@@ -170,8 +169,8 @@ public class OrderManagementApplication {
         Thread customerB = new Thread(() -> {
             try {
                 List<Item> items = Arrays.asList(new Item("P004", 3));
-                Order order = orderService.createOrder("C002", items, "Customer B Address");
-                Thread.sleep(50); // Simulate processing time
+                Order order = orderService.createOrder("C004", items, "Customer B Address");
+                Thread.sleep(50);
                 orderService.processOrder(order.getOrderId());
                 System.out.println("concurrentOrders Customer B: Order " + order.getOrderId() + " succeeded");
             } catch (Exception e) {

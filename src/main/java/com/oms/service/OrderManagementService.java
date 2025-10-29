@@ -38,7 +38,7 @@ public class OrderManagementService {
     public Order createOrder(String customerId, List<Item> items, String shippingAddress) {
         String orderId = UUID.randomUUID().toString();
 
-        // Enrich items with product prices
+        // Items with product prices
         for (Item item : items) {
             Product product = productRepository.findById(item.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product " + item.getProductId() + " not found"));
@@ -54,7 +54,7 @@ public class OrderManagementService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order " + orderId + " not found"));
 
-        // Rule 1: Products exist and are active
+        // Products exist and are active
         for (Item item : order.getItems()) {
             Product product = productRepository.findById(item.getProductId()).orElse(null);
             if (product == null || !product.isActive()) {
@@ -62,21 +62,21 @@ public class OrderManagementService {
             }
         }
 
-        // Rule 2: Quantities are valid (1-100)
+        // Quantities are valid (1-100)
         for (Item item : order.getItems()) {
             if (item.getQuantity() < MIN_QUANTITY || item.getQuantity() > MAX_QUANTITY) {
                 return ValidationResult.failure("Invalid quantity for product " + item.getProductId());
             }
         }
 
-        // Rule 3: Stock is available
+        //Stock is available
         for (Item item : order.getItems()) {
             if (!inventoryManager.checkAvailability(item.getProductId(), item.getQuantity())) {
                 return ValidationResult.failure("Insufficient stock for product " + item.getProductId());
             }
         }
 
-        // Rule 4: Customer exists
+        //Customer exists
         Customer customer = customerRepository.findById(order.getCustomerId()).orElse(null);
         if (customer == null) {
             return ValidationResult.failure("Customer not found");
@@ -88,12 +88,12 @@ public class OrderManagementService {
         order.setVatAmount(pricing.getVatAmount());
         orderRepository.save(order);
 
-        // Rule 5: Credit limit not exceeded
+        //Credit limit not exceeded
         if (customer.getAvailableCredit().compareTo(order.getTotalAmount()) < 0) {
             return ValidationResult.failure("Order exceeds customer credit limit");
         }
 
-        // Rule 6: Minimum order value 100 SEK (including VAT)
+        //Minimum order value 100 SEK (including VAT)
         if (order.getTotalAmount().compareTo(MIN_ORDER_VALUE) < 0) {
             return ValidationResult.failure("Order total is below minimum value of 100 SEK");
         }
@@ -105,10 +105,8 @@ public class OrderManagementService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order " + orderId + " not found"));
 
-        // Transition to PENDING_VALIDATION
         updateOrderStatus(orderId, OrderStatus.PENDING_VALIDATION);
 
-        // Validate the order
         ValidationResult validationResult = validateOrder(orderId);
 
         if (!validationResult.isValid()) {

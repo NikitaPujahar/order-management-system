@@ -129,7 +129,6 @@ class OrderManagementServiceTest {
         List<Item> items = Arrays.asList(new Item("P001", 1));
         Order order = orderService.createOrder("C001", items, "123 Main St");
 
-        // Cannot go directly from CREATED to PAID
         assertThrows(InvalidStateTransitionException.class, () -> {
             orderService.updateOrderStatus(order.getOrderId(), OrderStatus.PAID);
         });

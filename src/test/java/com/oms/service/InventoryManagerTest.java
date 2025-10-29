@@ -51,7 +51,6 @@ class InventoryManagerTest {
         inventoryManager.reserveStock("O001", items1);
         inventoryManager.reserveStock("O002", items2);
 
-        // 3 + 4 = 7 reserved, only 3 available
         assertTrue(inventoryManager.checkAvailability("P001", 3));
         assertFalse(inventoryManager.checkAvailability("P001", 4));
     }
@@ -97,10 +96,6 @@ class InventoryManagerTest {
 
     @Test
     void testConcurrentReservations() throws InterruptedException {
-        // Product has 10 units
-        // Two threads try to reserve 6 units each
-        // Only one should succeed
-
         AtomicInteger successCount = new AtomicInteger(0);
         AtomicInteger failureCount = new AtomicInteger(0);
         CountDownLatch latch = new CountDownLatch(2);

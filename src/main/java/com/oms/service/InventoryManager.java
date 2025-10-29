@@ -11,7 +11,6 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class InventoryManager {
     private final ProductRepository productRepository;
-    // Track reserved stock per order: orderId -> Map<productId, quantity>
     private final Map<String, Map<String, Integer>> reservations = new ConcurrentHashMap<>();
 
     public InventoryManager(ProductRepository productRepository) {
